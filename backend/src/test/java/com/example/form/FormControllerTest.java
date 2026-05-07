@@ -64,11 +64,11 @@ class FormControllerTest {
         when(jwtUtil.extractUserId(anyString())).thenReturn("1");
 
         // Simulate file write failure
-        doThrow(new RuntimeException("File write error")).when(formController).saveFormDataToFile(formData);
+        doThrow(new IOException("File write error")).when(formController).saveFormDataToFile(formData);
 
         ResponseEntity<Void> response = formController.submitForm("Bearer token", formData);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(500, response.getStatusCodeValue());
         verify(formService, times(1)).submitForm(formData);
     }
 }
