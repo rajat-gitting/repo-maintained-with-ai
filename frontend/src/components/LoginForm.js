@@ -9,10 +9,15 @@ function LoginForm() {
         e.preventDefault();
         try {
             const response = await axios.post('/api/auth/login', { email, password });
-            localStorage.setItem('token', response.data.token);
-            alert('Login successful!');
+            const token = response.data;
+            if (token && token.startsWith('eyJ')) { // Basic JWT structure check
+                localStorage.setItem('token', token);
+                alert('Login successful!');
+            } else {
+                throw new Error('Invalid token structure');
+            }
         } catch (error) {
-            alert('Login failed!');
+            alert('Login failed: ' + error.message);
         }
     };
 
