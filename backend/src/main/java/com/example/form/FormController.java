@@ -16,6 +16,9 @@ import java.nio.channels.FileLock;
 import java.io.IOException;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureException;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.AccessDeniedException;
 
 @RestController
 @RequestMapping("/api/form")
@@ -43,7 +46,7 @@ public class FormController {
             formService.submitForm(formData);
             saveFormDataToFile(formData);
             return ResponseEntity.ok().build();
-        } catch (ExpiredJwtException | MalformedJwtException e) {
+        } catch (ExpiredJwtException | MalformedJwtException | SignatureException e) {
             logger.error("JWT token is invalid", e);
             return ResponseEntity.status(401).build();
         } catch (IOException e) {
@@ -57,6 +60,9 @@ public class FormController {
              FileLock lock = channel.lock()) {
             String formDataJson = objectMapper.writeValueAsString(formData);
             channel.write(java.nio.ByteBuffer.wrap((formDataJson + System.lineSeparator()).getBytes()));
+        } catch (NoSuchFileException | AccessDeniedException e) {
+            logger.error("File access error", e);
+            throw new IOException("File access error", e);
         }
     }
 }
