@@ -1,0 +1,44 @@
+package com.example.form;
+
+import com.example.model.FormData;
+import com.example.service.FormService;
+import com.example.util.JwtUtil;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.ResponseEntity;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+class FormControllerTest {
+
+    @Mock
+    private FormService formService;
+
+    @Mock
+    private JwtUtil jwtUtil;
+
+    @InjectMocks
+    private FormController formController;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testSubmitForm() {
+        FormData formData = new FormData();
+        formData.setUserId("1");
+
+        when(jwtUtil.extractUserId(anyString())).thenReturn("1");
+
+        ResponseEntity<Void> response = formController.submitForm("Bearer token", formData);
+
+        assertEquals(200, response.getStatusCodeValue());
+        verify(formService, times(1)).submitForm(formData);
+    }
+}
