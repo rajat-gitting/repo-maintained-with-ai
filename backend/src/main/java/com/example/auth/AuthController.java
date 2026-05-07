@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Path;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -42,14 +43,17 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<User> signUp(@RequestBody UserDto userDto) {
         userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
-        User user = authService.signUp(userDto);
         try {
+            User user = authService.signUp(userDto);
             saveUserToFile(user);
+            return ResponseEntity.ok(user);
+        } catch (DataIntegrityViolationException e) {
+            logger.error("User creation failed due to existing email", e);
+            return ResponseEntity.status(409).body(null);
         } catch (IOException e) {
             logger.error("Failed to save user to file", e);
             return ResponseEntity.status(500).build();
         }
-        return ResponseEntity.ok(user);
     }
 
     private void saveUserToFile(User user) throws IOException {
@@ -69,6 +73,9 @@ public class AuthController {
         } catch (NoSuchFileException | AccessDeniedException e) {
             logger.error("File access error", e);
             throw new IOException("File access error", e);
+        } catch (IOException e) {
+            logger.error("Unexpected IO error", e);
+            throw e;
         }
     }
 
