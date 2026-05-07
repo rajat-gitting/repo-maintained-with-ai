@@ -20,6 +20,7 @@ import java.nio.channels.FileLock;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.AccessDeniedException;
+import java.nio.file.Path;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -46,11 +47,16 @@ public class AuthController {
             saveUserToFile(user);
         } catch (IOException e) {
             logger.error("Failed to save user to file", e);
+            return ResponseEntity.status(500).build();
         }
         return ResponseEntity.ok(user);
     }
 
     private void saveUserToFile(User user) throws IOException {
+        Path dataDir = Paths.get("data");
+        if (!Files.exists(dataDir)) {
+            Files.createDirectories(dataDir);
+        }
         try (FileChannel channel = FileChannel.open(Paths.get("data/users.json"), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND);
              FileLock lock = channel.lock()) {
             Map<String, Object> userMap = new HashMap<>();
@@ -69,10 +75,10 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody UserDto userDto) {
         User user = authService.login(userDto);
-        if (user != null && passwordEncoder.matches(userDto.getPassword(), user.getPassword())) {
-            String token = jwtUtil.generateToken(user);
-            return ResponseEntity.ok(token);
+        if (user == null || !passwordEncoder.matches(userDto.getPassword(), user.getPassword())) {
+            return ResponseEntity.status(401).body("Invalid credentials");
         }
-        return ResponseEntity.status(401).body("Invalid credentials");
+        String token = jwtUtil.generateToken(user);
+        return ResponseEntity.ok(token);
     }
 }
