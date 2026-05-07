@@ -34,11 +34,24 @@ class FormControllerTest {
         FormData formData = new FormData();
         formData.setUserId("1");
 
+        when(jwtUtil.validateToken(anyString())).thenReturn(true);
         when(jwtUtil.extractUserId(anyString())).thenReturn("1");
 
         ResponseEntity<Void> response = formController.submitForm("Bearer token", formData);
 
         assertEquals(200, response.getStatusCodeValue());
         verify(formService, times(1)).submitForm(formData);
+    }
+
+    @Test
+    void testSubmitFormWithInvalidToken() {
+        FormData formData = new FormData();
+
+        when(jwtUtil.validateToken(anyString())).thenReturn(false);
+
+        ResponseEntity<Void> response = formController.submitForm("Bearer invalidToken", formData);
+
+        assertEquals(401, response.getStatusCodeValue());
+        verify(formService, times(0)).submitForm(formData);
     }
 }
