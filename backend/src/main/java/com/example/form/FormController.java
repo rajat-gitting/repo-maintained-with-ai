@@ -11,6 +11,8 @@ import java.nio.file.StandardOpenOption;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 
 @RestController
 @RequestMapping("/api/form")
@@ -40,9 +42,10 @@ public class FormController {
     }
 
     private void saveFormDataToFile(FormData formData) {
-        try {
+        try (FileChannel channel = FileChannel.open(Paths.get("data/submissions.json"), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND);
+             FileLock lock = channel.lock()) {
             String formDataJson = objectMapper.writeValueAsString(formData);
-            Files.write(Paths.get("data/submissions.json"), (formDataJson + System.lineSeparator()).getBytes(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            channel.write(java.nio.ByteBuffer.wrap((formDataJson + System.lineSeparator()).getBytes()));
         } catch (Exception e) {
             logger.error("Failed to save form data to file", e);
         }
