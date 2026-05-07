@@ -76,4 +76,21 @@ class AuthControllerTest {
         assertEquals(401, response.getStatusCodeValue());
         assertEquals("Invalid credentials", response.getBody());
     }
+
+    @Test
+    void testSignUpFileWriteFailure() {
+        UserDto userDto = new UserDto("John", "Doe", "john.doe@example.com", "password");
+        User user = new User(1L, "John", "Doe", "john.doe@example.com", "hashedPassword");
+
+        when(passwordEncoder.encode(userDto.getPassword())).thenReturn("hashedPassword");
+        when(authService.signUp(userDto)).thenReturn(user);
+
+        // Simulate file write failure
+        doThrow(new RuntimeException("File write error")).when(authController).saveUserToFile(user);
+
+        ResponseEntity<User> response = authController.signUp(userDto);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(user, response.getBody());
+    }
 }
