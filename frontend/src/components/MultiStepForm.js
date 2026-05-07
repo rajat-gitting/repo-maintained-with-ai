@@ -1,22 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 function MultiStepForm() {
     const [step, setStep] = useState(1);
-    const [formData, setFormData] = useState({
-        firstName: '',
-        lastName: '',
-        dateOfBirth: '',
-        gender: '',
-        phone: '',
-        address: '',
-        city: '',
-        country: '',
-        occupation: '',
-        company: '',
-        yearsOfExperience: '',
-        skills: ''
+    const [formData, setFormData] = useState(() => {
+        const savedData = localStorage.getItem('formData');
+        return savedData ? JSON.parse(savedData) : {
+            firstName: '',
+            lastName: '',
+            dateOfBirth: '',
+            gender: '',
+            phone: '',
+            address: '',
+            city: '',
+            country: '',
+            occupation: '',
+            company: '',
+            yearsOfExperience: '',
+            skills: ''
+        };
     });
+
+    useEffect(() => {
+        localStorage.setItem('formData', JSON.stringify(formData));
+    }, [formData]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -24,7 +31,6 @@ function MultiStepForm() {
     };
 
     const validateStep = () => {
-        // Add validation logic for each step
         switch (step) {
             case 1:
                 return formData.firstName && formData.lastName && formData.dateOfBirth && formData.gender;
@@ -57,6 +63,7 @@ function MultiStepForm() {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             alert('Form submitted successfully!');
+            localStorage.removeItem('formData');
         } catch (error) {
             alert('Form submission failed!');
         }
