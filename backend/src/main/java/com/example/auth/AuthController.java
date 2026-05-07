@@ -18,6 +18,8 @@ import org.slf4j.LoggerFactory;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.AccessDeniedException;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -58,6 +60,9 @@ public class AuthController {
             userMap.put("email", user.getEmail());
             String userJson = objectMapper.writeValueAsString(userMap);
             channel.write(java.nio.ByteBuffer.wrap((userJson + System.lineSeparator()).getBytes()));
+        } catch (NoSuchFileException | AccessDeniedException e) {
+            logger.error("File access error", e);
+            throw new IOException("File access error", e);
         }
     }
 
