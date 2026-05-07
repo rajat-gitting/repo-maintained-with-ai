@@ -9,11 +9,14 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api/form")
 public class FormController {
 
+    private static final Logger logger = LoggerFactory.getLogger(FormController.class);
     private final FormService formService;
     private final JwtUtil jwtUtil;
     private final ObjectMapper objectMapper;
@@ -26,6 +29,9 @@ public class FormController {
 
     @PostMapping("/submit")
     public ResponseEntity<Void> submitForm(@RequestHeader("Authorization") String token, @RequestBody FormData formData) {
+        if (!jwtUtil.validateToken(token.replace("Bearer ", ""))) {
+            return ResponseEntity.status(401).build();
+        }
         String userId = jwtUtil.extractUserId(token.replace("Bearer ", ""));
         formData.setUserId(userId);
         formService.submitForm(formData);
@@ -38,7 +44,7 @@ public class FormController {
             String formDataJson = objectMapper.writeValueAsString(formData);
             Files.write(Paths.get("data/submissions.json"), (formDataJson + System.lineSeparator()).getBytes(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Failed to save form data to file", e);
         }
     }
 }
