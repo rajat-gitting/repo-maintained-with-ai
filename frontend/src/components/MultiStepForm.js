@@ -23,8 +23,26 @@ function MultiStepForm() {
         setFormData({ ...formData, [name]: value });
     };
 
+    const validateStep = () => {
+        // Add validation logic for each step
+        switch (step) {
+            case 1:
+                return formData.firstName && formData.lastName && formData.dateOfBirth && formData.gender;
+            case 2:
+                return formData.phone && formData.address && formData.city && formData.country;
+            case 3:
+                return formData.occupation && formData.company && formData.yearsOfExperience && formData.skills;
+            default:
+                return true;
+        }
+    };
+
     const nextStep = () => {
-        setStep(step + 1);
+        if (validateStep()) {
+            setStep(step + 1);
+        } else {
+            alert('Please fill in all required fields.');
+        }
     };
 
     const prevStep = () => {
