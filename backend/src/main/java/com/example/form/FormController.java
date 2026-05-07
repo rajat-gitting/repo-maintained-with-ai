@@ -61,8 +61,13 @@ public class FormController {
 
     private void saveFormDataToFile(FormData formData) throws IOException {
         Path dataDir = Paths.get("data");
-        if (!Files.exists(dataDir)) {
-            Files.createDirectories(dataDir);
+        try {
+            if (!Files.exists(dataDir)) {
+                Files.createDirectories(dataDir);
+            }
+        } catch (IOException e) {
+            logger.error("Failed to create data directory", e);
+            throw new IOException("Failed to create data directory", e);
         }
         try (FileChannel channel = FileChannel.open(Paths.get("data/submissions.json"), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND);
              FileLock lock = channel.lock()) {
