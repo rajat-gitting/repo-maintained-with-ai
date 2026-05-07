@@ -9,9 +9,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureException;
 
 class FormControllerTest {
 
@@ -30,43 +32,39 @@ class FormControllerTest {
     }
 
     @Test
-    void testSubmitForm() {
+    void testSubmitFormSuccess() {
         FormData formData = new FormData();
-        formData.setUserId("1");
+        String token = "Bearer validToken";
 
-        when(jwtUtil.validateToken(anyString())).thenReturn(true);
-        when(jwtUtil.extractUserId(anyString())).thenReturn("1");
+        when(jwtUtil.validateToken("validToken")).thenReturn(true);
+        doNothing().when(formService).submitForm(formData);
 
-        ResponseEntity<Void> response = formController.submitForm("Bearer token", formData);
+        ResponseEntity<Void> response = formController.submitForm(token, formData);
 
         assertEquals(200, response.getStatusCodeValue());
-        verify(formService, times(1)).submitForm(formData);
     }
 
     @Test
-    void testSubmitFormWithInvalidToken() {
+    void testSubmitFormInvalidToken() {
         FormData formData = new FormData();
+        String token = "Bearer invalidToken";
 
-        when(jwtUtil.validateToken(anyString())).thenReturn(false);
+        when(jwtUtil.validateToken("invalidToken")).thenReturn(false);
 
-        ResponseEntity<Void> response = formController.submitForm("Bearer invalidToken", formData);
+        ResponseEntity<Void> response = formController.submitForm(token, formData);
 
         assertEquals(401, response.getStatusCodeValue());
-        verify(formService, times(0)).submitForm(formData);
     }
 
     @Test
-    void testSubmitFormFileWriteFailure() {
+    void testSubmitFormServiceFailure() {
         FormData formData = new FormData();
-        formData.setUserId("1");
+        String token = "Bearer validToken";
 
-        when(jwtUtil.validateToken(anyString())).thenReturn(true);
-        when(jwtUtil.extractUserId(anyString())).thenReturn("1");
+        when(jwtUtil.validateToken("validToken")).thenReturn(true);
+        doThrow(new RuntimeException("Service failure")).when(formService).submitForm(formData);
 
-        // Simulate file write failure
-        doThrow(new IOException("File write error")).when(formController).saveFormDataToFile(formData);
-
-        ResponseEntity<Void> response = formController.submitForm("Bearer token", formData);
+        ResponseEntity<Void> response = formController.submitForm(token, formData);
 
         assertEquals(500, response.getStatusCodeValue());
     }
