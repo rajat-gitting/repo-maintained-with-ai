@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -75,6 +76,9 @@ public class AuthController {
             userMap.put("email", user.getEmail());
             String userJson = objectMapper.writeValueAsString(userMap);
             channel.write(java.nio.ByteBuffer.wrap((userJson + System.lineSeparator()).getBytes()));
+        } catch (JsonProcessingException e) {
+            logger.error("JSON processing error", e);
+            throw new IOException("JSON processing error", e);
         } catch (NoSuchFileException | AccessDeniedException e) {
             logger.error("File access error", e);
             throw new IOException("File access error", e);
