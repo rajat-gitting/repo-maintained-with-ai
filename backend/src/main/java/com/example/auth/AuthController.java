@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -42,14 +44,15 @@ public class AuthController {
     }
 
     private void saveUserToFile(User user) {
-        try {
+        try (FileChannel channel = FileChannel.open(Paths.get("data/users.json"), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND);
+             FileLock lock = channel.lock()) {
             Map<String, Object> userMap = new HashMap<>();
             userMap.put("id", user.getId());
             userMap.put("firstName", user.getFirstName());
             userMap.put("lastName", user.getLastName());
             userMap.put("email", user.getEmail());
             String userJson = objectMapper.writeValueAsString(userMap);
-            Files.write(Paths.get("data/users.json"), (userJson + System.lineSeparator()).getBytes(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            channel.write(java.nio.ByteBuffer.wrap((userJson + System.lineSeparator()).getBytes()));
         } catch (Exception e) {
             logger.error("Failed to save user to file", e);
         }
