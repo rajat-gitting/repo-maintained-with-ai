@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 
 function MultiStepForm() {
     const [step, setStep] = useState(1);
@@ -33,7 +34,10 @@ function MultiStepForm() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('/api/form/submit', formData);
+            const token = localStorage.getItem('token');
+            await axios.post('/api/form/submit', formData, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             alert('Form submitted successfully!');
         } catch (error) {
             alert('Form submission failed!');
