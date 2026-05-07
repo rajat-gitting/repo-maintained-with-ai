@@ -19,6 +19,7 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.AccessDeniedException;
+import java.nio.file.Path;
 
 @RestController
 @RequestMapping("/api/form")
@@ -56,6 +57,10 @@ public class FormController {
     }
 
     private void saveFormDataToFile(FormData formData) throws IOException {
+        Path dataDir = Paths.get("data");
+        if (!Files.exists(dataDir)) {
+            Files.createDirectories(dataDir);
+        }
         try (FileChannel channel = FileChannel.open(Paths.get("data/submissions.json"), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND);
              FileLock lock = channel.lock()) {
             String formDataJson = objectMapper.writeValueAsString(formData);
