@@ -13,11 +13,14 @@ import java.nio.file.StandardOpenOption;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
     private final AuthService authService;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
@@ -45,11 +48,10 @@ public class AuthController {
             userMap.put("firstName", user.getFirstName());
             userMap.put("lastName", user.getLastName());
             userMap.put("email", user.getEmail());
-            userMap.put("password", user.getPassword());
             String userJson = objectMapper.writeValueAsString(userMap);
             Files.write(Paths.get("data/users.json"), (userJson + System.lineSeparator()).getBytes(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Failed to save user to file", e);
         }
     }
 
