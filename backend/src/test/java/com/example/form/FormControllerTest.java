@@ -3,15 +3,18 @@ package com.example.form;
 import com.example.model.FormData;
 import com.example.service.FormService;
 import com.example.util.JwtUtil;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class FormControllerTest {
@@ -22,9 +25,6 @@ class FormControllerTest {
     @Mock
     private JwtUtil jwtUtil;
 
-    @Mock
-    private ObjectMapper objectMapper;
-
     @InjectMocks
     private FormController formController;
 
@@ -34,25 +34,39 @@ class FormControllerTest {
     }
 
     @Test
-    void testSubmitFormSuccess() throws Exception {
+    void testSubmitFormSuccess() {
         FormData formData = new FormData();
-        formData.setUserId("1");
+        String token = "Bearer validToken";
 
-        when(jwtUtil.validateToken(anyString())).thenReturn(true);
-        when(jwtUtil.extractUserId(anyString())).thenReturn("1");
+        when(jwtUtil.validateToken(any())).thenReturn(true);
+        when(jwtUtil.extractUserId(any())).thenReturn("userId");
 
-        ResponseEntity<Void> response = formController.submitForm("Bearer token", formData);
+        ResponseEntity<Void> response = formController.submitForm(token, formData);
 
         assertEquals(200, response.getStatusCodeValue());
+        verify(formService, times(1)).submitForm(any());
     }
 
     @Test
     void testSubmitFormInvalidToken() {
         FormData formData = new FormData();
+        String token = "Bearer invalidToken";
 
-        when(jwtUtil.validateToken(anyString())).thenReturn(false);
+        when(jwtUtil.validateToken(any())).thenReturn(false);
 
-        ResponseEntity<Void> response = formController.submitForm("Bearer invalidToken", formData);
+        ResponseEntity<Void> response = formController.submitForm(token, formData);
+
+        assertEquals(401, response.getStatusCodeValue());
+    }
+
+    @Test
+    void testSubmitFormJwtException() {
+        FormData formData = new FormData();
+        String token = "Bearer token";
+
+        doThrow(new ExpiredJwtException(null, null, "Token expired")).when(jwtUtil).validateToken(any());
+
+        ResponseEntity<Void> response = formController.submitForm(token, formData);
 
         assertEquals(401, response.getStatusCodeValue());
     }
