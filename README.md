@@ -23,3 +23,8 @@ This repository contains a sample full-stack application with a Java backend and
 ## Purpose
 
 This application is designed to demonstrate a simple full-stack setup with user authentication and form handling.
+
+## Testing
+
+- Backend tests can be run using `./gradlew test` in the `backend` directory.
+- Frontend tests can be run using `npm test` in the `frontend` directory.
