@@ -3,15 +3,14 @@ package com.example.form;
 import com.example.model.FormData;
 import com.example.service.FormService;
 import com.example.util.JwtUtil;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -23,6 +22,9 @@ class FormControllerTest {
     @Mock
     private JwtUtil jwtUtil;
 
+    @Mock
+    private ObjectMapper objectMapper;
+
     @InjectMocks
     private FormController formController;
 
@@ -32,14 +34,14 @@ class FormControllerTest {
     }
 
     @Test
-    void testSubmitFormSuccess() {
+    void testSubmitFormSuccess() throws Exception {
         FormData formData = new FormData();
         formData.setUserId("1");
 
         when(jwtUtil.validateToken(anyString())).thenReturn(true);
         when(jwtUtil.extractUserId(anyString())).thenReturn("1");
 
-        ResponseEntity<Void> response = formController.submitForm("Bearer jwtToken", formData);
+        ResponseEntity<Void> response = formController.submitForm("Bearer token", formData);
 
         assertEquals(200, response.getStatusCodeValue());
     }
