@@ -13,6 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.io.IOException;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
 
 @RestController
 @RequestMapping("/api/form")
@@ -31,23 +34,29 @@ public class FormController {
 
     @PostMapping("/submit")
     public ResponseEntity<Void> submitForm(@RequestHeader("Authorization") String token, @RequestBody FormData formData) {
-        if (!jwtUtil.validateToken(token.replace("Bearer ", ""))) {
+        try {
+            if (!jwtUtil.validateToken(token.replace("Bearer ", ""))) {
+                return ResponseEntity.status(401).build();
+            }
+            String userId = jwtUtil.extractUserId(token.replace("Bearer ", ""));
+            formData.setUserId(userId);
+            formService.submitForm(formData);
+            saveFormDataToFile(formData);
+            return ResponseEntity.ok().build();
+        } catch (ExpiredJwtException | MalformedJwtException e) {
+            logger.error("JWT token is invalid", e);
             return ResponseEntity.status(401).build();
+        } catch (IOException e) {
+            logger.error("Failed to save form data to file", e);
+            return ResponseEntity.status(500).build();
         }
-        String userId = jwtUtil.extractUserId(token.replace("Bearer ", ""));
-        formData.setUserId(userId);
-        formService.submitForm(formData);
-        saveFormDataToFile(formData);
-        return ResponseEntity.ok().build();
     }
 
-    private void saveFormDataToFile(FormData formData) {
+    private void saveFormDataToFile(FormData formData) throws IOException {
         try (FileChannel channel = FileChannel.open(Paths.get("data/submissions.json"), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND);
              FileLock lock = channel.lock()) {
             String formDataJson = objectMapper.writeValueAsString(formData);
             channel.write(java.nio.ByteBuffer.wrap((formDataJson + System.lineSeparator()).getBytes()));
-        } catch (Exception e) {
-            logger.error("Failed to save form data to file", e);
         }
     }
 }
