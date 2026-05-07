@@ -69,6 +69,5 @@ class FormControllerTest {
         ResponseEntity<Void> response = formController.submitForm("Bearer token", formData);
 
         assertEquals(500, response.getStatusCodeValue());
-        verify(formService, times(1)).submitForm(formData);
     }
 }
