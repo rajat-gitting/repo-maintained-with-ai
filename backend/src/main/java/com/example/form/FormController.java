@@ -53,6 +53,9 @@ public class FormController {
         } catch (IOException e) {
             logger.error("Failed to save form data to file", e);
             return ResponseEntity.status(500).build();
+        } catch (Exception e) {
+            logger.error("Form submission failed", e);
+            return ResponseEntity.status(500).build();
         }
     }
 
@@ -68,6 +71,9 @@ public class FormController {
         } catch (NoSuchFileException | AccessDeniedException e) {
             logger.error("File access error", e);
             throw new IOException("File access error", e);
+        } catch (IOException e) {
+            logger.error("Unexpected IO error", e);
+            throw e;
         }
     }
 }
