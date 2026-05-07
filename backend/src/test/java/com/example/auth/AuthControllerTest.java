@@ -86,7 +86,7 @@ class AuthControllerTest {
         when(authService.signUp(userDto)).thenReturn(user);
 
         // Simulate file write failure
-        doThrow(new RuntimeException("File write error")).when(authController).saveUserToFile(user);
+        doThrow(new IOException("File write error")).when(authController).saveUserToFile(user);
 
         ResponseEntity<User> response = authController.signUp(userDto);
 
