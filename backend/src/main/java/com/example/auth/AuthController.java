@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Base64;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 
 @RestController
 public class AuthController {
