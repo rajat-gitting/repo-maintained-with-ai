@@ -36,30 +36,30 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<String> signupUser(@RequestBody Map<String, String> user) {
+        if (USERS_FILE == null || USERS_FILE.isEmpty()) {
+            return new ResponseEntity<>("User file path is not configured", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        if (SECRET_KEY == null || SECRET_KEY.isEmpty()) {
+            return new ResponseEntity<>("JWT secret key is not configured", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        String email = user.get("email");
+        String password = user.get("password");
+        String confirmPassword = user.get("confirmPassword");
+
+        if (email == null || password == null || confirmPassword == null) {
+            return new ResponseEntity<>("Email, password, and confirm password are required", HttpStatus.BAD_REQUEST);
+        }
+
+        if (!EMAIL_PATTERN.matcher(email).matches()) {
+            return new ResponseEntity<>("Invalid email format", HttpStatus.BAD_REQUEST);
+        }
+
+        if (!password.equals(confirmPassword)) {
+            return new ResponseEntity<>("Passwords do not match", HttpStatus.BAD_REQUEST);
+        }
+
         try {
-            if (USERS_FILE == null || USERS_FILE.isEmpty()) {
-                return new ResponseEntity<>("User file path is not configured", HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-            if (SECRET_KEY == null || SECRET_KEY.isEmpty()) {
-                return new ResponseEntity<>("JWT secret key is not configured", HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-
-            String email = user.get("email");
-            String password = user.get("password");
-            String confirmPassword = user.get("confirmPassword");
-
-            if (email == null || password == null || confirmPassword == null) {
-                return new ResponseEntity<>("Email, password, and confirm password are required", HttpStatus.BAD_REQUEST);
-            }
-
-            if (!EMAIL_PATTERN.matcher(email).matches()) {
-                return new ResponseEntity<>("Invalid email format", HttpStatus.BAD_REQUEST);
-            }
-
-            if (!password.equals(confirmPassword)) {
-                return new ResponseEntity<>("Passwords do not match", HttpStatus.BAD_REQUEST);
-            }
-
             List<Map<String, String>> users = readUsersFromFile();
             for (Map<String, String> existingUser : users) {
                 if (existingUser.get("email").equals(email)) {
@@ -87,21 +87,21 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<String> loginUser(@RequestBody Map<String, String> user) {
+        if (USERS_FILE == null || USERS_FILE.isEmpty()) {
+            return new ResponseEntity<>("User file path is not configured", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        if (SECRET_KEY == null || SECRET_KEY.isEmpty()) {
+            return new ResponseEntity<>("JWT secret key is not configured", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        String email = user.get("email");
+        String password = user.get("password");
+
+        if (email == null || password == null) {
+            return new ResponseEntity<>("Email and password are required", HttpStatus.BAD_REQUEST);
+        }
+
         try {
-            if (USERS_FILE == null || USERS_FILE.isEmpty()) {
-                return new ResponseEntity<>("User file path is not configured", HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-            if (SECRET_KEY == null || SECRET_KEY.isEmpty()) {
-                return new ResponseEntity<>("JWT secret key is not configured", HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-
-            String email = user.get("email");
-            String password = user.get("password");
-
-            if (email == null || password == null) {
-                return new ResponseEntity<>("Email and password are required", HttpStatus.BAD_REQUEST);
-            }
-
             List<Map<String, String>> users = readUsersFromFile();
             for (Map<String, String> storedUser : users) {
                 if (storedUser.get("email").equals(email) && passwordEncoder.matches(password, storedUser.get("password"))) {
