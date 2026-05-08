@@ -37,6 +37,17 @@ public class UserService {
         return user;
     }
 
+    public User login(UserDto userDto) throws IOException {
+        List<User> users = readUsersFromFile();
+        for (User user : users) {
+            if (user.getEmail().equals(userDto.getEmail()) &&
+                passwordEncoder.matches(userDto.getPassword(), user.getPasswordHash())) {
+                return user;
+            }
+        }
+        return null;
+    }
+
     private List<User> readUsersFromFile() throws IOException {
         File file = new File(USERS_FILE_PATH);
         if (!file.exists()) {
