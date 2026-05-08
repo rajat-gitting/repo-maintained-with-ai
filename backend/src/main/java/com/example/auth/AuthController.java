@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.StandardOpenOption;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.util.concurrent.locks.ReentrantLock;
 
 @RestController
 @RequestMapping("/auth")
@@ -35,6 +36,7 @@ public class AuthController {
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private ObjectMapper objectMapper = new ObjectMapper();
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
+    private static final ReentrantLock lock = new ReentrantLock();
 
     @PostMapping("/signup")
     public ResponseEntity<String> signupUser(@RequestBody Map<String, String> user) {
@@ -62,6 +64,7 @@ public class AuthController {
         }
 
         try {
+            lock.lock();
             List<Map<String, String>> users = readUsersFromFile();
             for (Map<String, String> existingUser : users) {
                 if (existingUser.get("email").equals(email)) {
@@ -84,6 +87,8 @@ public class AuthController {
             return new ResponseEntity<>("Error processing user data", HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (IOException e) {
             return new ResponseEntity<>("Error accessing user data", HttpStatus.INTERNAL_SERVER_ERROR);
+        } finally {
+            lock.unlock();
         }
     }
 

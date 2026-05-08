@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.nio.file.StandardOpenOption;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.util.concurrent.locks.ReentrantLock;
 
 @RestController
 @RequestMapping("/form")
@@ -26,6 +27,7 @@ public class FormController {
 
     private static final String SUBMISSIONS_FILE = System.getenv("SUBMISSIONS_FILE_PATH");
     private ObjectMapper objectMapper = new ObjectMapper();
+    private static final ReentrantLock lock = new ReentrantLock();
 
     @PostMapping("/submit")
     public ResponseEntity<String> submitFormData(@RequestBody Map<String, Object> formData) {
@@ -39,6 +41,7 @@ public class FormController {
         }
 
         try {
+            lock.lock();
             List<Map<String, Object>> submissions = readSubmissionsFromFile();
 
             Map<String, Object> submission = new HashMap<>(formData);
@@ -52,6 +55,8 @@ public class FormController {
             return new ResponseEntity<>("Error processing form data", HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (IOException e) {
             return new ResponseEntity<>("Error submitting form", HttpStatus.INTERNAL_SERVER_ERROR);
+        } finally {
+            lock.unlock();
         }
     }
 
