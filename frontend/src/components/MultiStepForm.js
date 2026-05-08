@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './MultiStepForm.css';
 
 function MultiStepForm() {
   const [step, setStep] = useState(1);
@@ -32,7 +33,6 @@ function MultiStepForm() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Submit form data to the backend
     console.log('Form submitted:', formData);
   };
 
@@ -175,7 +175,7 @@ function MultiStepForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="multi-step-form">
       {renderStep()}
     </form>
   );
