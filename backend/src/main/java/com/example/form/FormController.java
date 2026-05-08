@@ -14,6 +14,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.io.IOException;
+import java.nio.file.StandardOpenOption;
 
 @RestController
 @RequestMapping("/form")
@@ -30,21 +32,25 @@ public class FormController {
                 return new ResponseEntity<>("User ID is required", HttpStatus.BAD_REQUEST);
             }
 
-            List<Map<String, Object>> submissions = new ArrayList<>();
-            if (Files.exists(Paths.get(SUBMISSIONS_FILE))) {
-                byte[] jsonData = Files.readAllBytes(Paths.get(SUBMISSIONS_FILE));
-                submissions = objectMapper.readValue(jsonData, List.class);
-            }
+            List<Map<String, Object>> submissions = readSubmissionsFromFile();
 
             Map<String, Object> submission = new HashMap<>(formData);
             submission.put("submissionId", UUID.randomUUID().toString());
             submissions.add(submission);
 
-            Files.write(Paths.get(SUBMISSIONS_FILE), objectMapper.writeValueAsBytes(submissions));
+            Files.write(Paths.get(SUBMISSIONS_FILE), objectMapper.writeValueAsBytes(submissions), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
             return new ResponseEntity<>("Form submitted successfully", HttpStatus.CREATED);
-        } catch (Exception e) {
+        } catch (IOException e) {
             return new ResponseEntity<>("Error submitting form", HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private List<Map<String, Object>> readSubmissionsFromFile() throws IOException {
+        if (Files.exists(Paths.get(SUBMISSIONS_FILE))) {
+            byte[] jsonData = Files.readAllBytes(Paths.get(SUBMISSIONS_FILE));
+            return objectMapper.readValue(jsonData, List.class);
+        }
+        return new ArrayList<>();
     }
 }

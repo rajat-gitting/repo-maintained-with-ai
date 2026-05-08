@@ -12,6 +12,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -38,6 +40,37 @@ public class AuthControllerTest {
                 .content(objectMapper.writeValueAsString(user)))
                 .andExpect(MockMvcResultMatchers.status().isCreated())
                 .andExpect(MockMvcResultMatchers.content().string("User registered successfully"));
+    }
+
+    @Test
+    public void testSignupUserInvalidEmail() throws Exception {
+        Map<String, String> user = new HashMap<>();
+        user.put("email", "invalid-email");
+        user.put("password", "password123");
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/auth/signup")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(user)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.content().string("Invalid email format"));
+    }
+
+    @Test
+    public void testSignupUserDuplicateEmail() throws Exception {
+        Map<String, String> user = new HashMap<>();
+        user.put("email", "test@example.com");
+        user.put("password", "password123");
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/auth/signup")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(user)))
+                .andExpect(MockMvcResultMatchers.status().isCreated());
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/auth/signup")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(user)))
+                .andExpect(MockMvcResultMatchers.status().isConflict())
+                .andExpect(MockMvcResultMatchers.content().string("Email already registered"));
     }
 
     @Test
