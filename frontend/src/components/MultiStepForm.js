@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import './MultiStepForm.css';
 
 function MultiStepForm() {
@@ -17,6 +18,7 @@ function MultiStepForm() {
         yearsOfExperience: '',
         skills: ''
     });
+    const [message, setMessage] = useState('');
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -43,6 +45,17 @@ function MultiStepForm() {
                 return formData.occupation && formData.company && formData.yearsOfExperience && formData.skills;
             default:
                 return true;
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const userId = localStorage.getItem('userId');
+            const response = await axios.post('/form/submit', { ...formData, userId });
+            setMessage(response.data);
+        } catch (error) {
+            setMessage('Error submitting form');
         }
     };
 
@@ -180,13 +193,14 @@ function MultiStepForm() {
 
     return (
         <div className="multi-step-form">
-            <form>
+            <form onSubmit={handleSubmit}>
                 {renderStep()}
                 <div className="navigation-buttons">
                     {step > 1 && <button type="button" onClick={prevStep}>Back</button>}
                     {step < 4 && <button type="button" onClick={nextStep}>Next</button>}
                 </div>
             </form>
+            {message && <p>{message}</p>}
         </div>
     );
 }
