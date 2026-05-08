@@ -22,6 +22,7 @@
 1. Ensure the `backend/data/avatars/` directory exists or is created on startup.
 2. Configure Spring Boot's `spring.servlet.multipart.max-file-size=2MB` in `application.properties`.
 3. Ensure the application has access to the `backend/data/avatars/` directory for reading and writing files.
+4. Ensure the application is running with the necessary permissions to read and write files in the avatar directory.
 
 ### Security
 - Users can only view and edit their own profiles.
@@ -30,3 +31,4 @@
 ### Testing
 - Ensure all new features are covered by unit tests.
 - Run the test suite to verify functionality.
+- Tests include validation of avatar file type, size, and dimensions.

@@ -9,8 +9,10 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import javax.imageio.ImageIO;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
@@ -55,10 +57,25 @@ class UserServiceTest {
     void testUploadAvatarInvalidDimensions() throws IOException {
         when(avatar.getContentType()).thenReturn("image/jpeg");
         when(avatar.getSize()).thenReturn(1024L);
-        when(avatar.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
+        BufferedImage largeImage = new BufferedImage(2048, 2048, BufferedImage.TYPE_INT_RGB);
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(new byte[0]);
+        when(avatar.getInputStream()).thenReturn(inputStream);
+        ImageIO.write(largeImage, "jpg", inputStream);
 
         assertThrows(IllegalArgumentException.class, () -> {
             userService.uploadAvatar("user123", avatar);
         }, "Image dimensions exceed 1024x1024 px.");
+    }
+
+    @Test
+    void testUploadAvatarValid() throws IOException {
+        when(avatar.getContentType()).thenReturn("image/jpeg");
+        when(avatar.getSize()).thenReturn(1024L);
+        BufferedImage validImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(new byte[0]);
+        when(avatar.getInputStream()).thenReturn(inputStream);
+        ImageIO.write(validImage, "jpg", inputStream);
+
+        userService.uploadAvatar("user123", avatar);
     }
 }
