@@ -22,6 +22,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.ArrayList;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 @RestController
 public class AuthController {
@@ -67,9 +68,9 @@ public class AuthController {
 
             // Retrieve users and verify credentials
             List<Map<String, String>> users = getUsers();
-            Map<String, String> foundUser = users.stream().filter(u -> u.get("email").equals(email)).findFirst().orElse(null);
+            Optional<Map<String, String>> foundUser = users.stream().filter(u -> u.get("email").equals(email)).findFirst();
 
-            if (foundUser == null || !passwordEncoder.matches(password, foundUser.get("password"))) {
+            if (foundUser.isEmpty() || !passwordEncoder.matches(password, foundUser.get().get("password"))) {
                 return new ResponseEntity<>("Invalid login credentials", HttpStatus.UNAUTHORIZED);
             }
 
