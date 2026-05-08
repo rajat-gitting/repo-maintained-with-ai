@@ -24,12 +24,14 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Base64;
+import org.springframework.beans.factory.annotation.Value;
 
 @RestController
 public class AuthController {
 
     private static final Path USERS_FILE_PATH = Paths.get("data/users.json");
-    private static final String SECRET_KEY = new String(Base64.getDecoder().decode(System.getenv("JWT_SECRET_KEY_BASE64")));
+    @Value("${jwt.secret.key.base64}")
+    private String secretKeyBase64;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -79,7 +81,7 @@ public class AuthController {
                     .setSubject(email)
                     .setIssuedAt(new Date())
                     .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 hours
-                    .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                    .signWith(SignatureAlgorithm.HS256, Base64.getDecoder().decode(secretKeyBase64))
                     .compact();
 
             return new ResponseEntity<>(token, HttpStatus.OK);
