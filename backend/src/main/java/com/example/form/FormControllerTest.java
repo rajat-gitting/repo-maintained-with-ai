@@ -46,8 +46,8 @@ public class FormControllerTest {
     @Test
     public void testSubmitFormDataFileIOError() {
         // Simulate file I/O error by setting an invalid path
-        String originalFilePath = FormController.SUBMISSIONS_FILE;
-        FormController.SUBMISSIONS_FILE = "/invalid/path/submissions.json";
+        Path originalFilePath = FormController.SUBMISSIONS_FILE_PATH;
+        FormController.SUBMISSIONS_FILE_PATH = Paths.get("/invalid/path/submissions.json");
 
         Map<String, Object> formData = new HashMap<>();
         formData.put("userId", "12345");
@@ -60,6 +60,6 @@ public class FormControllerTest {
         assertEquals("Error submitting form", response.getBody());
 
         // Restore original file path
-        FormController.SUBMISSIONS_FILE = originalFilePath;
+        FormController.SUBMISSIONS_FILE_PATH = originalFilePath;
     }
 }

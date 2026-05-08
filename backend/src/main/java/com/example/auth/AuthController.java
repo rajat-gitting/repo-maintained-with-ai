@@ -21,11 +21,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.ArrayList;
 import java.io.IOException;
+import java.nio.file.Path;
 
 @RestController
 public class AuthController {
 
-    private static final String USERS_FILE = "data/users.json";
+    private static final Path USERS_FILE_PATH = Paths.get("data/users.json");
     private static final String SECRET_KEY = System.getenv("JWT_SECRET_KEY");
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -50,7 +51,7 @@ public class AuthController {
 
             // Append user details to JSON file
             users.add(userDetails);
-            Files.write(Paths.get(USERS_FILE), objectMapper.writeValueAsBytes(users), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            Files.write(USERS_FILE_PATH, objectMapper.writeValueAsBytes(users), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
             return new ResponseEntity<>("User registered successfully", HttpStatus.CREATED);
         } catch (IOException e) {
@@ -86,10 +87,10 @@ public class AuthController {
     }
 
     private List<Map<String, String>> getUsers() throws IOException {
-        if (!Files.exists(Paths.get(USERS_FILE))) {
+        if (!Files.exists(USERS_FILE_PATH)) {
             return new ArrayList<>();
         }
-        byte[] jsonData = Files.readAllBytes(Paths.get(USERS_FILE));
+        byte[] jsonData = Files.readAllBytes(USERS_FILE_PATH);
         return objectMapper.readValue(jsonData, new TypeReference<List<Map<String, String>>>() {});
     }
 }

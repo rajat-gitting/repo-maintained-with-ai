@@ -76,8 +76,8 @@ public class AuthControllerTest {
     @Test
     public void testFileIOErrorDuringSignup() {
         // Simulate file I/O error by setting an invalid path
-        String originalFilePath = AuthController.USERS_FILE;
-        AuthController.USERS_FILE = "/invalid/path/users.json";
+        Path originalFilePath = AuthController.USERS_FILE_PATH;
+        AuthController.USERS_FILE_PATH = Paths.get("/invalid/path/users.json");
 
         Map<String, String> user = new HashMap<>();
         user.put("email", "error@example.com");
@@ -89,6 +89,6 @@ public class AuthControllerTest {
         assertEquals("Error accessing user data", response.getBody());
 
         // Restore original file path
-        AuthController.USERS_FILE = originalFilePath;
+        AuthController.USERS_FILE_PATH = originalFilePath;
     }
 }

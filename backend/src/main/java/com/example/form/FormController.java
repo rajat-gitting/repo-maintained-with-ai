@@ -16,11 +16,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
+import java.nio.file.Path;
 
 @RestController
 public class FormController {
 
-    private static final String SUBMISSIONS_FILE = "data/submissions.json";
+    private static final Path SUBMISSIONS_FILE_PATH = Paths.get("data/submissions.json");
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostMapping("/submitForm")
@@ -39,7 +40,7 @@ public class FormController {
             String submissionJson = objectMapper.writeValueAsString(submission);
 
             // Append submission to the JSON file
-            Files.write(Paths.get(SUBMISSIONS_FILE), (submissionJson + System.lineSeparator()).getBytes(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            Files.write(SUBMISSIONS_FILE_PATH, (submissionJson + System.lineSeparator()).getBytes(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 
             return new ResponseEntity<>("Form submitted successfully", HttpStatus.OK);
         } catch (IOException e) {
