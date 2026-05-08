@@ -11,11 +11,14 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.HashMap;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 @RestController
 public class FormController {
 
     private static final String SUBMISSIONS_FILE = "data/submissions.json";
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostMapping("/submitForm")
     public ResponseEntity<String> submitFormData(@RequestBody Map<String, Object> formData) {
@@ -30,7 +33,7 @@ public class FormController {
             submission.put("userId", userId);
 
             // Convert submission to JSON string
-            String submissionJson = submission.toString();
+            String submissionJson = objectMapper.writeValueAsString(submission);
 
             // Append submission to the JSON file
             Files.write(Paths.get(SUBMISSIONS_FILE), (submissionJson + System.lineSeparator()).getBytes(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);

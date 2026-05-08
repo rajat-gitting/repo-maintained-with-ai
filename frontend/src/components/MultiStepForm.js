@@ -17,14 +17,45 @@ function MultiStepForm() {
     yearsOfExperience: '',
     skills: ''
   });
+  const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
+  const validateStep = () => {
+    const newErrors = {};
+    switch (step) {
+      case 1:
+        if (!formData.firstName) newErrors.firstName = 'First name is required';
+        if (!formData.lastName) newErrors.lastName = 'Last name is required';
+        if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
+        if (!formData.gender) newErrors.gender = 'Gender is required';
+        break;
+      case 2:
+        if (!formData.phone) newErrors.phone = 'Phone is required';
+        if (!formData.address) newErrors.address = 'Address is required';
+        if (!formData.city) newErrors.city = 'City is required';
+        if (!formData.country) newErrors.country = 'Country is required';
+        break;
+      case 3:
+        if (!formData.occupation) newErrors.occupation = 'Occupation is required';
+        if (!formData.company) newErrors.company = 'Company is required';
+        if (!formData.yearsOfExperience) newErrors.yearsOfExperience = 'Years of experience is required';
+        if (!formData.skills) newErrors.skills = 'Skills are required';
+        break;
+      default:
+        break;
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const nextStep = () => {
-    setStep(step + 1);
+    if (validateStep()) {
+      setStep(step + 1);
+    }
   };
 
   const prevStep = () => {
@@ -33,7 +64,9 @@ function MultiStepForm() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    if (validateStep()) {
+      console.log('Form submitted:', formData);
+    }
   };
 
   const renderStep = () => {
@@ -50,6 +83,7 @@ function MultiStepForm() {
               onChange={handleChange}
               required
             />
+            {errors.firstName && <p className="error">{errors.firstName}</p>}
             <input
               type="text"
               name="lastName"
@@ -58,6 +92,7 @@ function MultiStepForm() {
               onChange={handleChange}
               required
             />
+            {errors.lastName && <p className="error">{errors.lastName}</p>}
             <input
               type="date"
               name="dateOfBirth"
@@ -66,6 +101,7 @@ function MultiStepForm() {
               onChange={handleChange}
               required
             />
+            {errors.dateOfBirth && <p className="error">{errors.dateOfBirth}</p>}
             <select
               name="gender"
               value={formData.gender}
@@ -77,6 +113,7 @@ function MultiStepForm() {
               <option value="female">Female</option>
               <option value="other">Other</option>
             </select>
+            {errors.gender && <p className="error">{errors.gender}</p>}
             <button type="button" onClick={nextStep}>Next</button>
           </div>
         );
@@ -92,6 +129,7 @@ function MultiStepForm() {
               onChange={handleChange}
               required
             />
+            {errors.phone && <p className="error">{errors.phone}</p>}
             <input
               type="text"
               name="address"
@@ -100,6 +138,7 @@ function MultiStepForm() {
               onChange={handleChange}
               required
             />
+            {errors.address && <p className="error">{errors.address}</p>}
             <input
               type="text"
               name="city"
@@ -108,6 +147,7 @@ function MultiStepForm() {
               onChange={handleChange}
               required
             />
+            {errors.city && <p className="error">{errors.city}</p>}
             <input
               type="text"
               name="country"
@@ -116,6 +156,7 @@ function MultiStepForm() {
               onChange={handleChange}
               required
             />
+            {errors.country && <p className="error">{errors.country}</p>}
             <button type="button" onClick={prevStep}>Back</button>
             <button type="button" onClick={nextStep}>Next</button>
           </div>
@@ -132,6 +173,7 @@ function MultiStepForm() {
               onChange={handleChange}
               required
             />
+            {errors.occupation && <p className="error">{errors.occupation}</p>}
             <input
               type="text"
               name="company"
@@ -140,6 +182,7 @@ function MultiStepForm() {
               onChange={handleChange}
               required
             />
+            {errors.company && <p className="error">{errors.company}</p>}
             <input
               type="number"
               name="yearsOfExperience"
@@ -148,6 +191,7 @@ function MultiStepForm() {
               onChange={handleChange}
               required
             />
+            {errors.yearsOfExperience && <p className="error">{errors.yearsOfExperience}</p>}
             <input
               type="text"
               name="skills"
@@ -156,6 +200,7 @@ function MultiStepForm() {
               onChange={handleChange}
               required
             />
+            {errors.skills && <p className="error">{errors.skills}</p>}
             <button type="button" onClick={prevStep}>Back</button>
             <button type="button" onClick={nextStep}>Next</button>
           </div>

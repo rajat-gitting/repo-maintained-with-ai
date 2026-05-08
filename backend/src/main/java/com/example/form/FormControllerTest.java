@@ -42,4 +42,24 @@ public class FormControllerTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("User ID is required", response.getBody());
     }
+
+    @Test
+    public void testSubmitFormDataFileIOError() {
+        // Simulate file I/O error by setting an invalid path
+        String originalFilePath = FormController.SUBMISSIONS_FILE;
+        FormController.SUBMISSIONS_FILE = "/invalid/path/submissions.json";
+
+        Map<String, Object> formData = new HashMap<>();
+        formData.put("userId", "12345");
+        formData.put("firstName", "John");
+        formData.put("lastName", "Doe");
+
+        ResponseEntity<String> response = restTemplate.postForEntity("/submitForm", formData, String.class);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals("Error submitting form", response.getBody());
+
+        // Restore original file path
+        FormController.SUBMISSIONS_FILE = originalFilePath;
+    }
 }

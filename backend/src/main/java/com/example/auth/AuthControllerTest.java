@@ -31,14 +31,45 @@ public class AuthControllerTest {
     }
 
     @Test
+    public void testSignupUserAlreadyExists() {
+        Map<String, String> user = new HashMap<>();
+        user.put("email", "test@example.com");
+        user.put("password", "password123");
+
+        // First signup
+        restTemplate.postForEntity("/signup", user, String.class);
+
+        // Second signup attempt
+        ResponseEntity<String> response = restTemplate.postForEntity("/signup", user, String.class);
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertEquals("User already exists", response.getBody());
+    }
+
+    @Test
     public void testLoginUser() {
         Map<String, String> user = new HashMap<>();
         user.put("email", "test@example.com");
         user.put("password", "password123");
 
+        // Ensure user is signed up first
+        restTemplate.postForEntity("/signup", user, String.class);
+
         ResponseEntity<String> response = restTemplate.postForEntity("/login", user, String.class);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         // Additional assertions can be made to check the token format
+    }
+
+    @Test
+    public void testLoginUserInvalidCredentials() {
+        Map<String, String> user = new HashMap<>();
+        user.put("email", "nonexistent@example.com");
+        user.put("password", "wrongpassword");
+
+        ResponseEntity<String> response = restTemplate.postForEntity("/login", user, String.class);
+
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals("Invalid login credentials", response.getBody());
     }
 }
