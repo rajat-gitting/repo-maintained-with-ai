@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.regex.Pattern;
 import java.io.IOException;
 import java.nio.file.StandardOpenOption;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 
 @RestController
 @RequestMapping("/auth")
@@ -75,7 +77,7 @@ public class AuthController {
             userDetails.put("password", hashedPassword);
 
             users.add(userDetails);
-            Files.write(Paths.get(USERS_FILE), objectMapper.writeValueAsBytes(users), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            writeUsersToFile(users);
 
             return new ResponseEntity<>("User registered successfully", HttpStatus.CREATED);
         } catch (JsonProcessingException e) {
@@ -133,5 +135,12 @@ public class AuthController {
             }
         }
         return new ArrayList<>();
+    }
+
+    private void writeUsersToFile(List<Map<String, String>> users) throws IOException {
+        try (FileChannel channel = FileChannel.open(Paths.get(USERS_FILE), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+             FileLock lock = channel.lock()) {
+            Files.write(Paths.get(USERS_FILE), objectMapper.writeValueAsBytes(users), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        }
     }
 }

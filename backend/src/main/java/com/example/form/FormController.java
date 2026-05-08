@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.io.IOException;
 import java.nio.file.StandardOpenOption;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 
 @RestController
 @RequestMapping("/form")
@@ -43,7 +45,7 @@ public class FormController {
             submission.put("submissionId", UUID.randomUUID().toString());
             submissions.add(submission);
 
-            Files.write(Paths.get(SUBMISSIONS_FILE), objectMapper.writeValueAsBytes(submissions), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            writeSubmissionsToFile(submissions);
 
             return new ResponseEntity<>("Form submitted successfully", HttpStatus.CREATED);
         } catch (JsonProcessingException e) {
@@ -63,5 +65,12 @@ public class FormController {
             }
         }
         return new ArrayList<>();
+    }
+
+    private void writeSubmissionsToFile(List<Map<String, Object>> submissions) throws IOException {
+        try (FileChannel channel = FileChannel.open(Paths.get(SUBMISSIONS_FILE), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+             FileLock lock = channel.lock()) {
+            Files.write(Paths.get(SUBMISSIONS_FILE), objectMapper.writeValueAsBytes(submissions), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        }
     }
 }
