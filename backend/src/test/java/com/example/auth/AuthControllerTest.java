@@ -34,6 +34,7 @@ public class AuthControllerTest {
         Map<String, String> user = new HashMap<>();
         user.put("email", "test@example.com");
         user.put("password", "password123");
+        user.put("confirmPassword", "password123");
 
         mockMvc.perform(MockMvcRequestBuilders.post("/auth/signup")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -47,6 +48,7 @@ public class AuthControllerTest {
         Map<String, String> user = new HashMap<>();
         user.put("email", "invalid-email");
         user.put("password", "password123");
+        user.put("confirmPassword", "password123");
 
         mockMvc.perform(MockMvcRequestBuilders.post("/auth/signup")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -60,6 +62,7 @@ public class AuthControllerTest {
         Map<String, String> user = new HashMap<>();
         user.put("email", "test@example.com");
         user.put("password", "password123");
+        user.put("confirmPassword", "password123");
 
         mockMvc.perform(MockMvcRequestBuilders.post("/auth/signup")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -79,6 +82,7 @@ public class AuthControllerTest {
         Map<String, String> user = new HashMap<>();
         user.put("email", "test@example.com");
         user.put("password", "password123");
+        user.put("confirmPassword", "password123");
 
         mockMvc.perform(MockMvcRequestBuilders.post("/auth/signup")
                 .contentType(MediaType.APPLICATION_JSON)

@@ -28,6 +28,10 @@ public class FormController {
     @PostMapping("/submit")
     public ResponseEntity<String> submitFormData(@RequestBody Map<String, Object> formData) {
         try {
+            if (SUBMISSIONS_FILE == null || SUBMISSIONS_FILE.isEmpty()) {
+                return new ResponseEntity<>("Submissions file path is not configured", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
             String userId = (String) formData.get("userId");
             if (userId == null || userId.isEmpty()) {
                 return new ResponseEntity<>("User ID is required", HttpStatus.BAD_REQUEST);
