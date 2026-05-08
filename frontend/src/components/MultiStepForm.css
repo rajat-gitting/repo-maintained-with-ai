@@ -1,0 +1,38 @@
+.multi-step-form {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.multi-step-form h3 {
+    color: #333;
+}
+
+.multi-step-form input, .multi-step-form select {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.multi-step-form button {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 5px;
+}
+
+.multi-step-form button:hover {
+    background-color: #45a049;
+}
+
+.navigation-buttons {
+    text-align: center;
+}
