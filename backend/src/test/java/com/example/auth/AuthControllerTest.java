@@ -64,4 +64,40 @@ public class AuthControllerTest {
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string("Error saving user data."));
     }
+
+    @Test
+    public void testLoginUserSuccess() throws Exception {
+        String signupJson = "{"email":"test@example.com", "password":"password123"}";
+        mockMvc.perform(post("/signup")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(signupJson))
+                .andExpect(status().isCreated());
+
+        String loginJson = "{"email":"test@example.com", "password":"password123"}";
+        mockMvc.perform(post("/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(loginJson))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.isEmptyOrNullString())));
+    }
+
+    @Test
+    public void testLoginUserInvalidCredentials() throws Exception {
+        String loginJson = "{"email":"wrong@example.com", "password":"wrongpassword"}";
+        mockMvc.perform(post("/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(loginJson))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().string("Invalid credentials."));
+    }
+
+    @Test
+    public void testLoginUserBadRequest() throws Exception {
+        String loginJson = "{"email":"test@example.com"}";
+        mockMvc.perform(post("/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(loginJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Email and password are required."));
+    }
 }
