@@ -16,10 +16,12 @@
 - `GET /api/profile`: Fetches the logged-in user's profile.
 - `PUT /api/profile`: Updates the logged-in user's profile.
 - `POST /api/profile/avatar`: Uploads an avatar for the logged-in user.
+- `GET /api/avatars/{filename}`: Serves the avatar image for the given filename.
 
 ### Setup Steps
 1. Ensure the `backend/data/avatars/` directory exists or is created on startup.
 2. Configure Spring Boot's `spring.servlet.multipart.max-file-size=2MB` in `application.properties`.
+3. Ensure the application has access to the `backend/data/avatars/` directory for reading and writing files.
 
 ### Security
 - Users can only view and edit their own profiles.
