@@ -13,6 +13,9 @@ import java.util.Map;
 import java.util.HashMap;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
+import java.io.IOException;
+import java.util.List;
+import java.util.ArrayList;
 
 @RestController
 public class FormController {
@@ -39,7 +42,7 @@ public class FormController {
             Files.write(Paths.get(SUBMISSIONS_FILE), (submissionJson + System.lineSeparator()).getBytes(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 
             return new ResponseEntity<>("Form submitted successfully", HttpStatus.OK);
-        } catch (Exception e) {
+        } catch (IOException e) {
             return new ResponseEntity<>("Error submitting form", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

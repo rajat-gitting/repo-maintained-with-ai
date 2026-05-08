@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
+import java.util.ArrayList;
+import java.io.IOException;
 
 @RestController
 public class AuthController {
@@ -51,8 +53,8 @@ public class AuthController {
             Files.write(Paths.get(USERS_FILE), objectMapper.writeValueAsBytes(users), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
             return new ResponseEntity<>("User registered successfully", HttpStatus.CREATED);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Error registering user", HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (IOException e) {
+            return new ResponseEntity<>("Error accessing user data", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -78,12 +80,12 @@ public class AuthController {
                     .compact();
 
             return new ResponseEntity<>(token, HttpStatus.OK);
-        } catch (Exception e) {
+        } catch (IOException e) {
             return new ResponseEntity<>("Error processing login", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    private List<Map<String, String>> getUsers() throws Exception {
+    private List<Map<String, String>> getUsers() throws IOException {
         if (!Files.exists(Paths.get(USERS_FILE))) {
             return new ArrayList<>();
         }

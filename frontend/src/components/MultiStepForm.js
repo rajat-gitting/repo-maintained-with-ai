@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import './MultiStepForm.css';
 
 function MultiStepForm() {
@@ -62,10 +63,15 @@ function MultiStepForm() {
     setStep(step - 1);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateStep()) {
-      console.log('Form submitted:', formData);
+      try {
+        const response = await axios.post('/submitForm', formData);
+        console.log('Form submitted:', response.data);
+      } catch (error) {
+        console.error('Error submitting form:', error);
+      }
     }
   };
 

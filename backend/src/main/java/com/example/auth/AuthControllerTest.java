@@ -72,4 +72,23 @@ public class AuthControllerTest {
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertEquals("Invalid login credentials", response.getBody());
     }
+
+    @Test
+    public void testFileIOErrorDuringSignup() {
+        // Simulate file I/O error by setting an invalid path
+        String originalFilePath = AuthController.USERS_FILE;
+        AuthController.USERS_FILE = "/invalid/path/users.json";
+
+        Map<String, String> user = new HashMap<>();
+        user.put("email", "error@example.com");
+        user.put("password", "password123");
+
+        ResponseEntity<String> response = restTemplate.postForEntity("/signup", user, String.class);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals("Error accessing user data", response.getBody());
+
+        // Restore original file path
+        AuthController.USERS_FILE = originalFilePath;
+    }
 }
