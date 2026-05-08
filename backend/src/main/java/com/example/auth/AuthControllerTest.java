@@ -74,25 +74,6 @@ public class AuthControllerTest {
     }
 
     @Test
-    public void testFileIOErrorDuringSignup() {
-        // Simulate file I/O error by setting an invalid path
-        Path originalFilePath = AuthController.USERS_FILE_PATH;
-        AuthController.USERS_FILE_PATH = Paths.get("/invalid/path/users.json");
-
-        Map<String, String> user = new HashMap<>();
-        user.put("email", "error@example.com");
-        user.put("password", "password123");
-
-        ResponseEntity<String> response = restTemplate.postForEntity("/signup", user, String.class);
-
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals("Error accessing user data", response.getBody());
-
-        // Restore original file path
-        AuthController.USERS_FILE_PATH = originalFilePath;
-    }
-
-    @Test
     public void testInvalidJWTTokenHandling() {
         // Simulate invalid JWT token
         String invalidToken = "invalid.token.value";

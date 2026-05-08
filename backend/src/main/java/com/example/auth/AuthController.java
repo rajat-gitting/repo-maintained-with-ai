@@ -26,55 +26,48 @@ import java.util.Optional;
 import java.util.Base64;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 @RestController
 public class AuthController {
 
-    private static final Path USERS_FILE_PATH = Paths.get("data/users.json");
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     @Value("${jwt.secret.key.base64}")
     private String secretKeyBase64;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @PostMapping("/signup")
     public ResponseEntity<String> signupUser(@RequestBody Map<String, String> user) {
-        try {
-            String email = user.get("email");
-            String password = user.get("password");
+        String email = user.get("email");
+        String password = user.get("password");
 
-            // Check if user already exists
-            List<Map<String, String>> users = getUsers();
-            boolean userExists = users.stream().anyMatch(u -> u.get("email").equals(email));
-            if (userExists) {
-                return new ResponseEntity<>("User already exists", HttpStatus.CONFLICT);
-            }
-
-            String hashedPassword = passwordEncoder.encode(password);
-            Map<String, String> userDetails = new HashMap<>();
-            userDetails.put("email", email);
-            userDetails.put("password", hashedPassword);
-
-            // Append user details to JSON file
-            users.add(userDetails);
-            Files.write(USERS_FILE_PATH, objectMapper.writeValueAsBytes(users), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-
-            return new ResponseEntity<>("User registered successfully", HttpStatus.CREATED);
-        } catch (IOException e) {
-            return new ResponseEntity<>("Error accessing user data", HttpStatus.INTERNAL_SERVER_ERROR);
+        // Check if user already exists
+        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM users WHERE email = ?", Integer.class, email);
+        if (count != null && count > 0) {
+            return new ResponseEntity<>("User already exists", HttpStatus.CONFLICT);
         }
+
+        String hashedPassword = passwordEncoder.encode(password);
+        jdbcTemplate.update("INSERT INTO users (email, password) VALUES (?, ?)", email, hashedPassword);
+
+        return new ResponseEntity<>("User registered successfully", HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
     public ResponseEntity<String> loginUser(@RequestBody Map<String, String> user) {
+        String email = user.get("email");
+        String password = user.get("password");
+
         try {
-            String email = user.get("email");
-            String password = user.get("password");
+            Map<String, Object> foundUser = jdbcTemplate.queryForMap("SELECT * FROM users WHERE email = ?", email);
+            String storedPassword = (String) foundUser.get("password");
 
-            // Retrieve users and verify credentials
-            List<Map<String, String>> users = getUsers();
-            Optional<Map<String, String>> foundUser = users.stream().filter(u -> u.get("email").equals(email)).findFirst();
-
-            if (foundUser.isEmpty() || !passwordEncoder.matches(password, foundUser.get().get("password"))) {
+            if (!passwordEncoder.matches(password, storedPassword)) {
                 return new ResponseEntity<>("Invalid login credentials", HttpStatus.UNAUTHORIZED);
             }
 
@@ -86,16 +79,8 @@ public class AuthController {
                     .compact();
 
             return new ResponseEntity<>(token, HttpStatus.OK);
-        } catch (IOException e) {
+        } catch (Exception e) {
             return new ResponseEntity<>("Error processing login", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-    }
-
-    private List<Map<String, String>> getUsers() throws IOException {
-        if (!Files.exists(USERS_FILE_PATH)) {
-            return new ArrayList<>();
-        }
-        byte[] jsonData = Files.readAllBytes(USERS_FILE_PATH);
-        return objectMapper.readValue(jsonData, new TypeReference<List<Map<String, String>>>() {});
     }
 }
