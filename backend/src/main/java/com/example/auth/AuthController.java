@@ -23,12 +23,13 @@ import java.util.ArrayList;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Base64;
 
 @RestController
 public class AuthController {
 
     private static final Path USERS_FILE_PATH = Paths.get("data/users.json");
-    private static final String SECRET_KEY = System.getenv("JWT_SECRET_KEY");
+    private static final String SECRET_KEY = new String(Base64.getDecoder().decode(System.getenv("JWT_SECRET_KEY_BASE64")));
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private final ObjectMapper objectMapper = new ObjectMapper();
 

@@ -91,4 +91,13 @@ public class AuthControllerTest {
         // Restore original file path
         AuthController.USERS_FILE_PATH = originalFilePath;
     }
+
+    @Test
+    public void testInvalidJWTTokenHandling() {
+        // Simulate invalid JWT token
+        String invalidToken = "invalid.token.value";
+        ResponseEntity<String> response = restTemplate.getForEntity("/protectedEndpoint", String.class, invalidToken);
+
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    }
 }
