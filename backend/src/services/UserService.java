@@ -8,9 +8,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -21,44 +26,24 @@ public class UserService {
     private static final List<String> ALLOWED_FILE_TYPES = Arrays.asList("image/jpeg", "image/png", "image/webp");
     private static final long MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
     private static final int MAX_DIMENSION = 1024;
+    private static final String AVATAR_DIRECTORY = "backend/data/avatars/";
 
-    /**
-     * Retrieve the user profile for a given user ID.
-     *
-     * @param userId the ID of the user
-     * @return the user's profile
-     */
     public UserProfile getUserProfile(String userId) {
         return userStorage.getUserProfile(userId);
     }
 
-    /**
-     * Update the user profile for a given user ID.
-     *
-     * @param userId the ID of the user
-     * @param profile the new profile data
-     * @return the updated user profile
-     */
     public UserProfile updateUserProfile(String userId, UserProfile profile) {
         return userStorage.updateUserProfile(userId, profile);
     }
 
-    /**
-     * Upload an avatar for a given user ID.
-     *
-     * @param userId the ID of the user
-     * @param avatar the avatar file to upload
-     */
     public void uploadAvatar(String userId, MultipartFile avatar) {
         validateAvatar(avatar);
-        // Logic to save the avatar file to the filesystem would go here
+        String filename = saveAvatarToFileSystem(userId, avatar);
+        UserProfile profile = userStorage.getUserProfile(userId);
+        profile.setAvatarUrl(filename);
+        userStorage.updateUserProfile(userId, profile);
     }
 
-    /**
-     * Validate the avatar file.
-     *
-     * @param avatar the avatar file to validate
-     */
     private void validateAvatar(MultipartFile avatar) {
         if (!ALLOWED_FILE_TYPES.contains(avatar.getContentType())) {
             throw new IllegalArgumentException("Invalid file type. Only JPEG, PNG, and WebP are allowed.");
@@ -73,6 +58,19 @@ public class UserService {
             }
         } catch (IOException e) {
             throw new IllegalArgumentException("Failed to read image file.");
+        }
+    }
+
+    private String saveAvatarToFileSystem(String userId, MultipartFile avatar) {
+        try {
+            Files.createDirectories(Paths.get(AVATAR_DIRECTORY));
+            String extension = avatar.getContentType().split("/")[1];
+            String filename = userId + "-" + System.currentTimeMillis() + "." + extension;
+            Path filePath = Paths.get(AVATAR_DIRECTORY + filename);
+            Files.write(filePath, avatar.getBytes());
+            return filename;
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Failed to save avatar file.");
         }
     }
 }

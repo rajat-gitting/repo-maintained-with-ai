@@ -21,12 +21,6 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    /**
-     * Get the profile of the logged-in user.
-     *
-     * @param authentication the authentication object containing user details
-     * @return the user's profile information
-     */
     @GetMapping
     public ResponseEntity<UserProfile> getUserProfile(Authentication authentication) {
         String userId = authentication.getName();
@@ -34,13 +28,6 @@ public class UserController {
         return ResponseEntity.ok(profile);
     }
 
-    /**
-     * Update the profile of the logged-in user.
-     *
-     * @param authentication the authentication object containing user details
-     * @param profile the profile data to update
-     * @return the updated profile information
-     */
     @PutMapping
     public ResponseEntity<UserProfile> updateUserProfile(Authentication authentication, @RequestBody UserProfile profile) {
         String userId = authentication.getName();
@@ -48,13 +35,6 @@ public class UserController {
         return ResponseEntity.ok(updatedProfile);
     }
 
-    /**
-     * Upload an avatar for the logged-in user.
-     *
-     * @param authentication the authentication object containing user details
-     * @param avatar the avatar file to upload
-     * @return a response entity indicating success or failure
-     */
     @PostMapping("/avatar")
     public ResponseEntity<String> uploadAvatar(Authentication authentication, @RequestParam("avatar") MultipartFile avatar) {
         String userId = authentication.getName();
