@@ -17,6 +17,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 @RestController
 public class AuthController {
@@ -51,10 +54,14 @@ public class AuthController {
         String password = user.get("password");
 
         try {
-            Map<String, Object> foundUser = jdbcTemplate.queryForMap("SELECT * FROM users WHERE email = ?", email);
-            String storedPassword = (String) foundUser.get("password");
+            User foundUser = jdbcTemplate.queryForObject("SELECT * FROM users WHERE email = ?", new Object[]{email}, new RowMapper<User>() {
+                @Override
+                public User mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return new User(rs.getString("email"), rs.getString("password"));
+                }
+            });
 
-            if (!passwordEncoder.matches(password, storedPassword)) {
+            if (foundUser == null || !passwordEncoder.matches(password, foundUser.getPassword())) {
                 return new ResponseEntity<>("Invalid login credentials", HttpStatus.UNAUTHORIZED);
             }
 
@@ -68,6 +75,24 @@ public class AuthController {
             return new ResponseEntity<>(token, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error processing login", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private static class User {
+        private String email;
+        private String password;
+
+        public User(String email, String password) {
+            this.email = email;
+            this.password = password;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public String getPassword() {
+            return password;
         }
     }
 }

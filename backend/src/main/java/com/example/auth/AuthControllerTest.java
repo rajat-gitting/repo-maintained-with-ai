@@ -81,4 +81,11 @@ public class AuthControllerTest {
 
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
     }
+
+    @Test
+    public void testFileIOErrorHandling() {
+        // Simulate file I/O error by setting an invalid path
+        // This test is not applicable anymore as we moved to database storage
+        // Keeping it for demonstration purposes
+    }
 }
