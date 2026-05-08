@@ -26,7 +26,7 @@ public class AuthControllerTest {
 
     @BeforeEach
     public void setup() throws Exception {
-        Files.deleteIfExists(Paths.get("data/users.json"));
+        Files.deleteIfExists(Paths.get(System.getenv("USERS_FILE_PATH")));
     }
 
     @Test

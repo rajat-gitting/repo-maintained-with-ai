@@ -11,6 +11,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.UUID;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,7 +22,7 @@ import java.nio.file.StandardOpenOption;
 @RequestMapping("/form")
 public class FormController {
 
-    private static final String SUBMISSIONS_FILE = "data/submissions.json";
+    private static final String SUBMISSIONS_FILE = System.getenv("SUBMISSIONS_FILE_PATH");
     private ObjectMapper objectMapper = new ObjectMapper();
 
     @PostMapping("/submit")
@@ -41,6 +42,8 @@ public class FormController {
             Files.write(Paths.get(SUBMISSIONS_FILE), objectMapper.writeValueAsBytes(submissions), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
             return new ResponseEntity<>("Form submitted successfully", HttpStatus.CREATED);
+        } catch (JsonProcessingException e) {
+            return new ResponseEntity<>("Error processing form data", HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (IOException e) {
             return new ResponseEntity<>("Error submitting form", HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -49,7 +52,11 @@ public class FormController {
     private List<Map<String, Object>> readSubmissionsFromFile() throws IOException {
         if (Files.exists(Paths.get(SUBMISSIONS_FILE))) {
             byte[] jsonData = Files.readAllBytes(Paths.get(SUBMISSIONS_FILE));
-            return objectMapper.readValue(jsonData, List.class);
+            try {
+                return objectMapper.readValue(jsonData, List.class);
+            } catch (JsonProcessingException e) {
+                throw new IOException("Malformed JSON in submissions file", e);
+            }
         }
         return new ArrayList<>();
     }

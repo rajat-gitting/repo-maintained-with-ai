@@ -26,7 +26,7 @@ public class FormControllerTest {
 
     @BeforeEach
     public void setup() throws Exception {
-        Files.deleteIfExists(Paths.get("data/submissions.json"));
+        Files.deleteIfExists(Paths.get(System.getenv("SUBMISSIONS_FILE_PATH")));
     }
 
     @Test

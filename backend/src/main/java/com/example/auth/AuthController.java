@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
@@ -26,8 +27,9 @@ import java.nio.file.StandardOpenOption;
 @RequestMapping("/auth")
 public class AuthController {
 
-    private static final String USERS_FILE = "data/users.json";
+    private static final String USERS_FILE = System.getenv("USERS_FILE_PATH");
     private static final String SECRET_KEY = System.getenv("JWT_SECRET_KEY");
+    private static final long TOKEN_EXPIRATION = Long.parseLong(System.getenv("JWT_EXPIRATION_TIME"));
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private ObjectMapper objectMapper = new ObjectMapper();
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
@@ -37,6 +39,10 @@ public class AuthController {
         try {
             String email = user.get("email");
             String password = user.get("password");
+
+            if (email == null || password == null) {
+                return new ResponseEntity<>("Email and password are required", HttpStatus.BAD_REQUEST);
+            }
 
             if (!EMAIL_PATTERN.matcher(email).matches()) {
                 return new ResponseEntity<>("Invalid email format", HttpStatus.BAD_REQUEST);
@@ -60,6 +66,8 @@ public class AuthController {
             Files.write(Paths.get(USERS_FILE), objectMapper.writeValueAsBytes(users), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
             return new ResponseEntity<>("User registered successfully", HttpStatus.CREATED);
+        } catch (JsonProcessingException e) {
+            return new ResponseEntity<>("Error processing user data", HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (IOException e) {
             return new ResponseEntity<>("Error accessing user data", HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -71,13 +79,17 @@ public class AuthController {
             String email = user.get("email");
             String password = user.get("password");
 
+            if (email == null || password == null) {
+                return new ResponseEntity<>("Email and password are required", HttpStatus.BAD_REQUEST);
+            }
+
             List<Map<String, String>> users = readUsersFromFile();
             for (Map<String, String> storedUser : users) {
                 if (storedUser.get("email").equals(email) && passwordEncoder.matches(password, storedUser.get("password"))) {
                     String token = Jwts.builder()
                             .setSubject(email)
                             .setIssuedAt(new Date())
-                            .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1 day expiration
+                            .setExpiration(new Date(System.currentTimeMillis() + TOKEN_EXPIRATION))
                             .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
                             .compact();
 
@@ -85,6 +97,8 @@ public class AuthController {
                 }
             }
             return new ResponseEntity<>("Invalid credentials", HttpStatus.UNAUTHORIZED);
+        } catch (JsonProcessingException e) {
+            return new ResponseEntity<>("Error processing user data", HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (IOException e) {
             return new ResponseEntity<>("Error accessing user data", HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -93,7 +107,11 @@ public class AuthController {
     private List<Map<String, String>> readUsersFromFile() throws IOException {
         if (Files.exists(Paths.get(USERS_FILE))) {
             byte[] jsonData = Files.readAllBytes(Paths.get(USERS_FILE));
-            return objectMapper.readValue(jsonData, List.class);
+            try {
+                return objectMapper.readValue(jsonData, List.class);
+            } catch (JsonProcessingException e) {
+                throw new IOException("Malformed JSON in users file", e);
+            }
         }
         return new ArrayList<>();
     }
