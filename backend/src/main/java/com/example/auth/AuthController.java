@@ -13,19 +13,23 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Date;
 import java.util.Base64;
+import java.util.List;
+import java.util.ArrayList;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 @RestController
 public class AuthController {
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private static final Path USERS_FILE_PATH = Paths.get("data/users.json");
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${jwt.secret.key.base64}")
     private String secretKeyBase64;
@@ -36,16 +40,27 @@ public class AuthController {
         String email = user.get("email");
         String password = user.get("password");
 
-        // Check if user already exists
-        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM users WHERE email = ?", Integer.class, email);
-        if (count != null && count > 0) {
-            return new ResponseEntity<>("User already exists", HttpStatus.CONFLICT);
+        try {
+            List<Map<String, String>> users = loadUsers();
+
+            for (Map<String, String> existingUser : users) {
+                if (email.equals(existingUser.get("email"))) {
+                    return new ResponseEntity<>("User already exists", HttpStatus.CONFLICT);
+                }
+            }
+
+            String hashedPassword = passwordEncoder.encode(password);
+            Map<String, String> newUser = new HashMap<>();
+            newUser.put("email", email);
+            newUser.put("password", hashedPassword);
+            users.add(newUser);
+
+            saveUsers(users);
+
+            return new ResponseEntity<>("User registered successfully", HttpStatus.CREATED);
+        } catch (IOException e) {
+            return new ResponseEntity<>("Error processing signup", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
-        String hashedPassword = passwordEncoder.encode(password);
-        jdbcTemplate.update("INSERT INTO users (email, password) VALUES (?, ?)", email, hashedPassword);
-
-        return new ResponseEntity<>("User registered successfully", HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
@@ -54,45 +69,50 @@ public class AuthController {
         String password = user.get("password");
 
         try {
-            User foundUser = jdbcTemplate.queryForObject("SELECT * FROM users WHERE email = ?", new Object[]{email}, new RowMapper<User>() {
-                @Override
-                public User mapRow(ResultSet rs, int rowNum) throws SQLException {
-                    return new User(rs.getString("email"), rs.getString("password"));
-                }
-            });
+            List<Map<String, String>> users = loadUsers();
+            Map<String, String> foundUser = null;
 
-            if (foundUser == null || !passwordEncoder.matches(password, foundUser.getPassword())) {
+            for (Map<String, String> existingUser : users) {
+                if (email.equals(existingUser.get("email"))) {
+                    foundUser = existingUser;
+                    break;
+                }
+            }
+
+            if (foundUser == null || !passwordEncoder.matches(password, foundUser.get("password"))) {
                 return new ResponseEntity<>("Invalid login credentials", HttpStatus.UNAUTHORIZED);
             }
 
             String token = Jwts.builder()
                     .setSubject(email)
                     .setIssuedAt(new Date())
-                    .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 hours
+                    .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
                     .signWith(SignatureAlgorithm.HS256, Base64.getDecoder().decode(secretKeyBase64))
                     .compact();
 
             return new ResponseEntity<>(token, HttpStatus.OK);
-        } catch (Exception e) {
+        } catch (IOException e) {
             return new ResponseEntity<>("Error processing login", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    private static class User {
-        private String email;
-        private String password;
-
-        public User(String email, String password) {
-            this.email = email;
-            this.password = password;
+    private List<Map<String, String>> loadUsers() throws IOException {
+        if (!Files.exists(USERS_FILE_PATH)) {
+            Files.createDirectories(USERS_FILE_PATH.getParent());
+            Files.write(USERS_FILE_PATH, "[]".getBytes(), StandardOpenOption.CREATE);
+            return new ArrayList<>();
         }
 
-        public String getEmail() {
-            return email;
+        String content = new String(Files.readAllBytes(USERS_FILE_PATH));
+        if (content.trim().isEmpty()) {
+            return new ArrayList<>();
         }
 
-        public String getPassword() {
-            return password;
-        }
+        return objectMapper.readValue(content, new TypeReference<List<Map<String, String>>>() {});
+    }
+
+    private void saveUsers(List<Map<String, String>> users) throws IOException {
+        String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(users);
+        Files.write(USERS_FILE_PATH, json.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 }
