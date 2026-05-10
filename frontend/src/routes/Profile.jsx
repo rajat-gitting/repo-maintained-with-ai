@@ -49,7 +49,7 @@ const Profile = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const requiredFields = ['firstName', 'lastName'];
     const newErrors = {};
@@ -62,21 +62,19 @@ const Profile = () => {
       setErrors(newErrors);
       return;
     }
-    const formData = new FormData();
-    Object.keys(profile).forEach(key => {
-      formData.append(key, profile[key]);
-    });
-    if (avatar) {
-      formData.append('avatar', avatar);
+    try {
+      const response = await axios.put('/api/profile', profile);
+      setProfile(response.data);
+      setErrors({});
+
+      if (avatar) {
+        const formData = new FormData();
+        formData.append('avatar', avatar);
+        await axios.post('/api/profile/avatar', formData);
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
     }
-    axios.put('/api/profile', formData)
-      .then(response => {
-        setProfile(response.data);
-        setErrors({});
-      })
-      .catch(error => {
-        console.error('Error updating profile:', error);
-      });
   };
 
   return (

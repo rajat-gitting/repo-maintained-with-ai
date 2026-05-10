@@ -1,0 +1,39 @@
+# ── Backend (Gradle / Spring Boot) ──────────────────────────────────────────
+backend/.gradle/
+backend/build/
+backend/out/
+backend/bin/
+!backend/gradle/wrapper/gradle-wrapper.jar
+!backend/gradle/wrapper/gradle-wrapper.properties
+
+# Spring Boot packaged jar
+*.jar
+*.war
+
+# ── Frontend (Node / Vite) ───────────────────────────────────────────────────
+node_modules/
+dist/
+.vite/
+frontend/.cache/
+frontend/coverage/
+*.local
+
+# ── Environment & secrets ────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── App data (runtime-generated) ────────────────────────────────────────────
+backend/src/storage/users.json
+backend/data/
+backend/backend/
+data/
+
+# ── OS & editor ─────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+*.iml
+.vscode/
